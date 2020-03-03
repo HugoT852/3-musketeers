@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+
 const currency = require('./');
 const ora = require('ora');
 
@@ -27,6 +28,8 @@ async function start (opts) {
 
     spinner.stop();
     console.log(`${amount} ${from} = ${result} ${to}`);
+    console.log(result);
+    return result;
   } catch (error) {
     spinner.stop();
     console.log(error);

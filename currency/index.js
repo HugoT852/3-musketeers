@@ -1,12 +1,26 @@
 const axios = require('axios');
 const money = require('money');
 
+/**
+ * url of the convertion rate btw currency, return a json, base EUR
+ */ 
 const RATES_URL = 'https://api.exchangeratesapi.io/latest';
+
+/**
+ * url of the convertion rate btw currency for bitcoin, return a json
+ */ 
 const BLOCKCHAIN_URL = 'https://blockchain.info/ticker';
+
 const CURRENCY_BITCOIN = 'BTC';
 
 const isAnyBTC = (from, to) => [from, to].includes(CURRENCY_BITCOIN);
 
+
+/**
+ * return the conversion btw the currency mentioned
+ * if no currency is mentioned, use US dollars to bitcoin
+ * error if unknown currency 
+ */ 
 module.exports = async opts => {
   const {amount = 1, from = 'USD', to = CURRENCY_BITCOIN} = opts;
   const promises = [];
@@ -14,11 +28,18 @@ module.exports = async opts => {
 
   const anyBTC = isAnyBTC(from, to);
 
+  /**
+ * if input contain the bitcoin currency
+ * use the bitcoin website
+ */ 
   if (anyBTC) {
     base = from === CURRENCY_BITCOIN ? to : from;
     promises.push(axios(BLOCKCHAIN_URL));
   }
 
+  /**
+ * request the conversion rate to other currency base on the first mentioned
+ */ 
   promises.unshift(axios(`${RATES_URL}?base=${base}`));
 
   try {
@@ -33,6 +54,10 @@ module.exports = async opts => {
       to
     };
 
+    /**
+    * if input contain the bitcoin currency
+    * request the exchange rate
+    */ 
     if (anyBTC) {
       const blockchain = responses.find(response =>
         response.data.hasOwnProperty(base)
@@ -43,13 +68,16 @@ module.exports = async opts => {
       });
     }
 
+      /**
+ * create the from to
+   */ 
     if (anyBTC) {
       Object.assign(conversionOpts, {
         'from': to,
         'to': from
       });
     }
-
+    
     return money.convert(amount, conversionOpts);
   } catch (error) {
     throw new Error (
